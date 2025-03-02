@@ -163,7 +163,7 @@ resource "aws_instance" "proxy1" {
 
 resource "aws_key_pair" "ec2_test_proxy" {
  key_name = "test"
- public_key = file("./ssh-key.pub")
+ public_key = file("./test.pub")
 }
 
 resource "aws_instance" "proxy2" {
