@@ -140,10 +140,10 @@ resource "aws_lb" "proxy" {
   
 }
 
-resource "aws_ec2" "proxy1"{
+resource "aws_instance" "proxy1" {
   ami           = "ami-0c55b159cbfafe1f0"
   instance_type = "t2.micro"
-  key_name      = "terraform"
+  key_name      = "terraform1"
   subnet_id     = aws_subnet.public-AZ1.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
@@ -153,10 +153,10 @@ resource "aws_ec2" "proxy1"{
   
 }
 
-resource "aws_ec2" "proxy2" {
+resource "aws_instance" "proxy2" {
   ami           = "ami-0c55b159cbfafe1f0"
   instance_type = "t2.micro"
-  key_name      = "terraform"
+  key_name      = "terraform1"
   subnet_id     = aws_subnet.public-AZ2.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
