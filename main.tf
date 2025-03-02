@@ -140,6 +140,22 @@ resource "aws_instance" "proxy1" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
+
+                # Set up the reverse proxy configuration for Nginx
+                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
+                server {
+                    listen 80;
+
+                    # Define proxy pass to the backend instances' load balancer
+                    location / {
+                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto \$scheme;
+                    }
+                }
+                EOC
                 echo "Proxy 1" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
@@ -161,6 +177,22 @@ resource "aws_instance" "proxy2" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
+
+                # Set up the reverse proxy configuration for Nginx
+                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
+                server {
+                    listen 80;
+
+                    # Define proxy pass to the backend instances' load balancer
+                    location / {
+                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto \$scheme;
+                    }
+                }
+                EOC
                 echo "Proxy 2" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
@@ -237,23 +269,7 @@ resource "aws_instance" "backend1" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-
-                # Set up the reverse proxy configuration for Nginx
-                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
-                server {
-                    listen 80;
-
-                    # Define proxy pass to the backend instances' load balancer
-                    location / {
-                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
-                        proxy_set_header Host \$host;
-                        proxy_set_header X-Real-IP \$remote_addr;
-                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                        proxy_set_header X-Forwarded-Proto \$scheme;
-                    }
-                }
-                EOC
-                # Start Nginx and enable it to run on boot
+                echo "backend 1" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -272,23 +288,7 @@ resource "aws_instance" "backend2" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-
-                # Set up the reverse proxy configuration for Nginx
-                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
-                server {
-                    listen 80;
-
-                    # Define proxy pass to the backend instances' load balancer
-                    location / {
-                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
-                        proxy_set_header Host \$host;
-                        proxy_set_header X-Real-IP \$remote_addr;
-                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                        proxy_set_header X-Forwarded-Proto \$scheme;
-                    }
-                }
-                EOC
-                # Start Nginx and enable it to run on boot
+                echo "backend 2" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
