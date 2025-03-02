@@ -156,7 +156,6 @@ resource "aws_instance" "proxy1" {
                     }
                 }
                 EOC
-                echo "Proxy 1" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -199,7 +198,6 @@ resource "aws_instance" "proxy2" {
                     }
                 }
                 EOC
-                echo "Proxy 2" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
