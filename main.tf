@@ -237,7 +237,23 @@ resource "aws_instance" "backend1" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "Backend 1" > /usr/share/nginx/html/index.html
+
+                # Set up the reverse proxy configuration for Nginx
+                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
+                server {
+                    listen 80;
+
+                    # Define proxy pass to the backend instances
+                    location / {
+                        proxy_pass http://${aws_lb.backend.dns_name}; 
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto \$scheme;
+                    }
+                }
+                EOC
+                # Start Nginx and enable it to run on boot
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -256,7 +272,23 @@ resource "aws_instance" "backend2" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "Backend 2" > /usr/share/nginx/html/index.html
+
+                # Set up the reverse proxy configuration for Nginx
+                cat <<EOC > /etc/nginx/conf.d/reverse_proxy.conf
+                server {
+                    listen 80;
+
+                    # Define proxy pass to the backend instances
+                    location / {
+                        proxy_pass http://${aws_lb.backend.dns_name}; 
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto \$scheme;
+                    }
+                }
+                EOC
+                # Start Nginx and enable it to run on boot
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
