@@ -125,6 +125,48 @@ resource "aws_security_group" "backend_sg" {
   }
 }
 
+resource "aws_instance" "proxy1" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "terraform1"
+  subnet_id     = aws_subnet.public-AZ1.id
+  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
+  associate_public_ip_address = true
+  tags = {
+    Name = "proxy1"
+  }
+
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo yum update -y
+                sudo yum install -y nginx
+                echo "Proxy 1" > /usr/share/nginx/html/index.html
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+              EOF
+} 
+
+resource "aws_instance" "proxy2" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "terraform1"
+  subnet_id     = aws_subnet.public-AZ2.id
+  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
+  associate_public_ip_address = true
+  tags = {
+    Name = "proxy2"
+  }
+  
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo yum update -y
+                sudo yum install -y nginx
+                echo "Proxy 2" > /usr/share/nginx/html/index.html
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+              EOF
+}
+
 resource "aws_lb" "proxy" {
   name               = "proxy"
   internal           = false
@@ -180,46 +222,3 @@ resource "aws_lb_listener" "proxy_listener" {
     target_group_arn = aws_lb_target_group.proxy_tg.arn
   }
 }
-
-
-resource "aws_instance" "proxy1" {
-  ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t2.micro"
-  key_name      = "terraform1"
-  subnet_id     = aws_subnet.public-AZ1.id
-  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
-  associate_public_ip_address = true
-  tags = {
-    Name = "proxy1"
-  }
-
-  user_data = <<-EOF
-                #!/bin/bash
-                sudo yum update -y
-                sudo yum install -y nginx
-                echo "Proxy 1" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
-                sudo systemctl enable nginx
-              EOF
-} 
-
-resource "aws_instance" "proxy2" {
-  ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t2.micro"
-  key_name      = "terraform1"
-  subnet_id     = aws_subnet.public-AZ2.id
-  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
-  associate_public_ip_address = true
-  tags = {
-    Name = "proxy2"
-  }
-  
-  user_data = <<-EOF
-                #!/bin/bash
-                sudo yum update -y
-                sudo yum install -y nginx
-                echo "Proxy 2" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
-                sudo systemctl enable nginx
-              EOF
-} 
