@@ -243,9 +243,9 @@ resource "aws_instance" "backend1" {
                 server {
                     listen 80;
 
-                    # Define proxy pass to the backend instances
+                    # Define proxy pass to the backend instances' load balancer
                     location / {
-                        proxy_pass http://${aws_lb.backend.dns_name}; 
+                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
                         proxy_set_header Host \$host;
                         proxy_set_header X-Real-IP \$remote_addr;
                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -278,9 +278,9 @@ resource "aws_instance" "backend2" {
                 server {
                     listen 80;
 
-                    # Define proxy pass to the backend instances
+                    # Define proxy pass to the backend instances' load balancer
                     location / {
-                        proxy_pass http://${aws_lb.backend.dns_name}; 
+                        proxy_pass http://${aws_lb.backend.dns_name};  # Use the backend LB's DNS here
                         proxy_set_header Host \$host;
                         proxy_set_header X-Real-IP \$remote_addr;
                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
