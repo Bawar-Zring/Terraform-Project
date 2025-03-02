@@ -78,3 +78,90 @@ resource "aws_route_table_association" "public-AZ2" {
   route_table_id = aws_route_table.public-routes.id
 }
 
+resource "aws_security_group" "proxy_sg" {
+  name        = "proxy_sg"
+  description = "Allow inbound traffic"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "backend_sg" {
+  name        = "backend_sg"
+  description = "Allow inbound traffic"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb" "proxy" {
+  name               = "proxy"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.proxy_sg.id]
+  subnets            = [aws_subnet.public-AZ1.id, aws_subnet.public-AZ2.id]
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "proxy"
+  }
+  
+}
+
+resource "aws_ec2" "proxy1"{
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "terraform"
+  subnet_id     = aws_subnet.public-AZ1.id
+  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
+  associate_public_ip_address = true
+  tags = {
+    Name = "proxy1"
+  }
+  
+}
+
+resource "aws_ec2" "proxy2" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "terraform"
+  subnet_id     = aws_subnet.public-AZ2.id
+  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
+  associate_public_ip_address = true
+  tags = {
+    Name = "proxy2"
+  }
+  
+}
