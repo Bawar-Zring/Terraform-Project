@@ -140,6 +140,46 @@ resource "aws_lb" "proxy" {
   
 }
 
+resource "aws_lb_target_group" "proxy_tg" {
+  name     = "proxy-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+  target_type = "instance"
+
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
+
+resource "aws_lb_target_group_attachment" "proxy1_attach" {
+  target_group_arn = aws_lb_target_group.proxy_tg.arn
+  target_id        = aws_instance.proxy1.id
+  port            = 80
+}
+
+resource "aws_lb_target_group_attachment" "proxy2_attach" {
+  target_group_arn = aws_lb_target_group.proxy_tg.arn
+  target_id        = aws_instance.proxy2.id
+  port            = 80
+}
+
+resource "aws_lb_listener" "proxy_listener" {
+  load_balancer_arn = aws_lb.proxy.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.proxy_tg.arn
+  }
+}
+
+
 resource "aws_instance" "proxy1" {
   ami           = "ami-0c55b159cbfafe1f0"
   instance_type = "t2.micro"
@@ -150,8 +190,16 @@ resource "aws_instance" "proxy1" {
   tags = {
     Name = "proxy1"
   }
-  
-}
+
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo yum update -y
+                sudo yum install -y nginx
+                echo "Proxy 1" > /usr/share/nginx/html/index.html
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+              EOF
+} 
 
 resource "aws_instance" "proxy2" {
   ami           = "ami-0c55b159cbfafe1f0"
@@ -164,4 +212,12 @@ resource "aws_instance" "proxy2" {
     Name = "proxy2"
   }
   
-}
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo yum update -y
+                sudo yum install -y nginx
+                echo "Proxy 2" > /usr/share/nginx/html/index.html
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+              EOF
+} 
