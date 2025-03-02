@@ -146,7 +146,7 @@ resource "aws_instance" "proxy1" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "proxy 2 test test test" > /usr/share/nginx/html/index.html
+                echo "proxy 1 test test test" > /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -312,7 +312,7 @@ resource "aws_lb_target_group_attachment" "backend2_attach" {
 
 resource "aws_lb" "backend" {
   name               = "backend"
-  internal           = true
+  internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.backend_sg.id]
   subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
