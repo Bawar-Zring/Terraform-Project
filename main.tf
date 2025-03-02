@@ -353,3 +353,7 @@ resource "aws_lb_listener" "backend_listener" {
     target_group_arn = aws_lb_target_group.backend_tg.arn
   }
 }
+
+ output "proxy_dns" {
+  value = aws_lb.proxy.dns_name
+ }
