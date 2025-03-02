@@ -1,95 +1,79 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-1" # Change this to your preferred AWS region
 }
 
+# VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
-    tags = {
-        Name = "main"
-    }
+  tags = {
+    Name = "MainVPC"
+  }
 }
 
+# Public Subnet 1
 resource "aws_subnet" "public-AZ1" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.0.0/24"
-  availability_zone       = "us-east-1a"
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-east-1a" # Change to your preferred AZ
   map_public_ip_on_launch = true
-    tags = {
-        Name = "public-AZ1"
-    }
+
+  tags = {
+    Name = "Public-Subnet-AZ1"
+  }
 }
 
-resource "aws_subnet" "private-AZ1" {
-  vpc_id = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
-    tags = {
-        Name = "private-AZ1"
-    }
-}
-
+# Public Subnet 2
 resource "aws_subnet" "public-AZ2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "us-east-1b"
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-east-1b" # Change to your preferred AZ
   map_public_ip_on_launch = true
-    tags = {
-        Name = "public-AZ2"
-    }
+
+  tags = {
+    Name = "Public-Subnet-AZ2"
+  }
 }
 
-resource "aws_subnet" "private-AZ2" {
+# Internet Gateway for Public Access
+resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
-  cidr_block = "10.0.3.0/24"
-  availability_zone = "us-east-1b"
-    tags = {
-        Name = "private-AZ2"
-    }
+
+  tags = {
+    Name = "MainIGW"
+  }
 }
 
-resource "aws_internet_gateway" "IGW" {
-  vpc_id = aws_vpc.main.id
-    tags = {
-        Name = "IGW"
-    }  
-}
-
-resource "aws_route_table" "public-routes" {
+# Route Table for Public Subnets
+resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.IGW.id
+    gateway_id = aws_internet_gateway.gw.id
   }
-  
+
   tags = {
-    Name = "Public-Routes"
+    Name = "PublicRouteTable"
   }
 }
 
-resource "aws_route_table_association" "public-AZ1" {
+# Associate Route Table with Public Subnets
+resource "aws_route_table_association" "public_AZ1" {
   subnet_id      = aws_subnet.public-AZ1.id
-  route_table_id = aws_route_table.public-routes.id
+  route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_route_table_association" "public-AZ2" {
+resource "aws_route_table_association" "public_AZ2" {
   subnet_id      = aws_subnet.public-AZ2.id
-  route_table_id = aws_route_table.public-routes.id
+  route_table_id = aws_route_table.public_rt.id
 }
 
+# Security Group for ALB
 resource "aws_security_group" "proxy_sg" {
-  name        = "proxy_sg"
-  description = "Allow inbound traffic"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
+  # Allow inbound HTTP (Port 80) from anywhere
   ingress {
     from_port   = 80
     to_port     = 80
@@ -97,76 +81,20 @@ resource "aws_security_group" "proxy_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow outbound traffic to any destination
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
 
-resource "aws_security_group" "backend_sg" {
-  name        = "backend_sg"
-  description = "Allow inbound traffic"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_instance" "proxy1" {
-  ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t2.micro"
-  key_name      = "terraform1"
-  subnet_id     = aws_subnet.public-AZ1.id
-  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
-  associate_public_ip_address = true
   tags = {
-    Name = "proxy1"
+    Name = "ALB-SG"
   }
-
-  user_data = <<-EOF
-                #!/bin/bash
-                sudo yum update -y
-                sudo yum install -y nginx
-                echo "Proxy 1" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
-                sudo systemctl enable nginx
-              EOF
-} 
-
-resource "aws_instance" "proxy2" {
-  ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t2.micro"
-  key_name      = "terraform1"
-  subnet_id     = aws_subnet.public-AZ2.id
-  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
-  associate_public_ip_address = true
-  tags = {
-    Name = "proxy2"
-  }
-  
-  user_data = <<-EOF
-                #!/bin/bash
-                sudo yum update -y
-                sudo yum install -y nginx
-                echo "Proxy 2" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
-                sudo systemctl enable nginx
-              EOF
 }
 
+# Create the Application Load Balancer (ALB)
 resource "aws_lb" "proxy" {
   name               = "proxy"
   internal           = false
@@ -179,15 +107,14 @@ resource "aws_lb" "proxy" {
   tags = {
     Name = "proxy"
   }
-  
 }
 
+# Target Group for the ALB
 resource "aws_lb_target_group" "proxy_tg" {
   name     = "proxy-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
-  target_type = "instance"
 
   health_check {
     path                = "/"
@@ -196,22 +123,40 @@ resource "aws_lb_target_group" "proxy_tg" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+
+  tags = {
+    Name = "proxy-tg"
+  }
 }
 
-resource "aws_lb_target_group_attachment" "proxy1_attach" {
+# Register an EC2 Instance with the Target Group
+resource "aws_instance" "proxy" {
+  ami           = "ami-0c55b159cbfafe1f0"  # Change this to your desired AMI ID
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public-AZ1.id
+  security_groups = [aws_security_group.proxy_sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "<h1>Hello from EC2 behind ALB</h1>" > /var/www/html/index.html
+              yum install -y httpd
+              systemctl start httpd
+              systemctl enable httpd
+              EOF
+
+  tags = {
+    Name = "Proxy-Instance"
+  }
+}
+
+# Attach the EC2 Instance to the Target Group
+resource "aws_lb_target_group_attachment" "proxy_attachment" {
   target_group_arn = aws_lb_target_group.proxy_tg.arn
-  target_id        = aws_instance.proxy1.id
+  target_id        = aws_instance.proxy.id
   port            = 80
-  depends_on      = [aws_instance.proxy1]
 }
 
-resource "aws_lb_target_group_attachment" "proxy2_attach" {
-  target_group_arn = aws_lb_target_group.proxy_tg.arn
-  target_id        = aws_instance.proxy2.id
-  port            = 80
-  depends_on      = [aws_instance.proxy2]
-}
-
+# ALB Listener to Forward Traffic
 resource "aws_lb_listener" "proxy_listener" {
   load_balancer_arn = aws_lb.proxy.arn
   port              = 80
