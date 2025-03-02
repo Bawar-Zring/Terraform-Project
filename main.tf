@@ -127,7 +127,7 @@ resource "aws_security_group" "backend_sg" {
 
 resource "aws_key_pair" "proxy1_key" {
   key_name   = "proxy1_key"
-  public_key = file("./proxy1_key.pub")
+  public_key = file("./test2.pub")
 }
 
 resource "aws_instance" "proxy1" {
