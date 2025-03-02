@@ -161,7 +161,7 @@ resource "aws_instance" "proxy1" {
               EOF
 } 
 
-resource "aws_key_pair" "ec2_test" {
+resource "aws_key_pair" "ec2_test_proxy" {
  key_name = "test"
  public_key = file("./ssh-key.pub")
 }
@@ -169,11 +169,10 @@ resource "aws_key_pair" "ec2_test" {
 resource "aws_instance" "proxy2" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
-  # key_name      = "terraform1"
   subnet_id     = aws_subnet.public-AZ2.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
-  key_name = aws_key_pair.ec2_test.key_name
+  key_name = aws_key_pair.ec2_test_proxy.key_name
   tags = {
     Name = "proxy2"
   }
