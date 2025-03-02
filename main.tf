@@ -128,7 +128,7 @@ resource "aws_security_group" "backend_sg" {
 resource "aws_instance" "proxy1" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
-  key_name      = "terraform1"
+  # key_name      = "terraform1"
   subnet_id     = aws_subnet.public-AZ1.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
@@ -149,7 +149,7 @@ resource "aws_instance" "proxy1" {
 resource "aws_instance" "proxy2" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
-  key_name      = "terraform1"
+  # key_name      = "terraform1"
   subnet_id     = aws_subnet.public-AZ2.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
