@@ -178,29 +178,12 @@ resource "aws_instance" "proxy2" {
               EOF
 }
 
-resource "aws_lb" "proxy" {
-  name               = "proxy"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.proxy_sg.id]
-  subnets            = [aws_subnet.public-AZ1.id, aws_subnet.public-AZ2.id]
-
-  enable_deletion_protection = false
-  depends_on = [ aws_instance.proxy1, aws_instance.proxy2, aws_security_group.proxy_sg, aws_lb_listener.proxy_listener, aws_lb_target_group.proxy_tg ]
-
-  tags = {
-    Name = "proxy"
-  }
-  
-}
-
 resource "aws_lb_target_group" "proxy_tg" {
   name     = "proxy-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
-  # depends_on = [aws_lb.proxy]
 
   health_check {
     path                = "/"
@@ -215,14 +198,14 @@ resource "aws_lb_target_group_attachment" "proxy1_attach" {
   target_group_arn = aws_lb_target_group.proxy_tg.arn
   target_id        = aws_instance.proxy1.id
   port            = 80
-  # depends_on      = [aws_instance.proxy1]
+  depends_on      = [aws_instance.proxy1]
 }
 
 resource "aws_lb_target_group_attachment" "proxy2_attach" {
   target_group_arn = aws_lb_target_group.proxy_tg.arn
   target_id        = aws_instance.proxy2.id
   port            = 80
-  # depends_on      = [aws_instance.proxy2]
+  depends_on      = [aws_instance.proxy2]
 }
 
 resource "aws_lb_listener" "proxy_listener" {
@@ -233,6 +216,20 @@ resource "aws_lb_listener" "proxy_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.proxy_tg.arn
+  }
+}
+
+resource "aws_lb" "proxy" {
+  name               = "proxy"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.proxy_sg.id]
+  subnets            = [aws_subnet.public-AZ1.id, aws_subnet.public-AZ2.id]
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "proxy"
   }
 }
 
@@ -286,7 +283,6 @@ resource "aws_lb_target_group" "backend_tg" {
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
-  # depends_on = [aws_lb.backend]
 
   health_check {
     path                = "/"
@@ -301,29 +297,14 @@ resource "aws_lb_target_group_attachment" "backend1_attach" {
   target_group_arn = aws_lb_target_group.backend_tg.arn
   target_id        = aws_instance.backend1.id
   port            = 80
-  # depends_on      = [aws_instance.backend1]
+  depends_on      = [aws_instance.backend1]
 }
 
 resource "aws_lb_target_group_attachment" "backend2_attach" {
   target_group_arn = aws_lb_target_group.backend_tg.arn
   target_id        = aws_instance.backend2.id
   port            = 80
-  # depends_on      = [aws_instance.backend2]
-}
-
-resource "aws_lb" "backend" {
-  name               = "backend"
-  internal           = true
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.backend_sg.id]
-  subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
-
-  enable_deletion_protection = false
-  depends_on = [ aws_instance.backend1, aws_instance.backend2, aws_security_group.backend_sg, aws_lb_listener.backend_listener, aws_lb_target_group.backend_tg ]
-
-  tags = {
-    Name = "backend"
-  }
+  depends_on      = [aws_instance.backend2]
 }
 
 resource "aws_lb_listener" "backend_listener" {
@@ -334,6 +315,21 @@ resource "aws_lb_listener" "backend_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+}
+
+resource "aws_lb" "backend" {
+  name               = "backend"
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.backend_sg.id]
+  subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
+
+  enable_deletion_protection = false
+  depends_on = [ aws_instance.backend1, aws_instance.backend2, aws_lb_listener.backend_listener, aws_lb_target_group.backend_tg ]
+
+  tags = {
+    Name = "backend"
   }
 }
 
