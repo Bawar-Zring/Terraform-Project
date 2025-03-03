@@ -110,12 +110,12 @@ resource "aws_security_group" "backend_sg" {
   description = "Allow inbound traffic"
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  
-  }
+ingress {
+  from_port   = 80
+  to_port     = 80
+  protocol    = "tcp"
+  security_groups = [aws_security_group.proxy_sg.id]
+}
 
   egress {
     from_port   = 0
@@ -273,7 +273,7 @@ resource "aws_instance" "backend2" {
 
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "backend 1" | sudo tee /usr/share/nginx/html/index.html
+                echo "backend 2" | sudo tee /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -312,7 +312,7 @@ resource "aws_lb_target_group_attachment" "backend2_attach" {
 
 resource "aws_lb" "backend" {
   name               = "backend"
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.backend_sg.id]
   subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
