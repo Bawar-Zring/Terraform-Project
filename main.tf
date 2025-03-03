@@ -236,10 +236,10 @@ resource "aws_lb" "proxy" {
   }
 }
 
-resource "aws_key_pair" "backend_key1" {
- key_name = "test"
- public_key = file("./backed1.pub")
-}
+# resource "aws_key_pair" "backend_key1" {
+#  key_name = "test"
+#  public_key = file("./backed1.pub")
+# }
 
 resource "aws_instance" "backend1" {
   ami           = "ami-05b10e08d247fb927"
@@ -247,7 +247,7 @@ resource "aws_instance" "backend1" {
   subnet_id     = aws_subnet.private-AZ1.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
-  key_name = aws_key_pair.backend_key1.key_name
+  # key_name = aws_key_pair.backend_key1.key_name
   tags = {
     Name = "backend1"
   }
@@ -261,10 +261,10 @@ resource "aws_instance" "backend1" {
               EOF
 }
 
-resource "aws_key_pair" "backend_key2" {
- key_name = "test"
- public_key = file("./backed2.pub")
-}
+# resource "aws_key_pair" "backend_key2" {
+#  key_name = "test"
+#  public_key = file("./backed2.pub")
+# }
 
 resource "aws_instance" "backend2" {
   ami           = "ami-05b10e08d247fb927"
@@ -272,7 +272,7 @@ resource "aws_instance" "backend2" {
   subnet_id     = aws_subnet.private-AZ2.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
-  key_name = aws_key_pair.backend_key2.key_name
+  # key_name = aws_key_pair.backend_key2.key_name
   tags = {
     Name = "backend2"
   }
