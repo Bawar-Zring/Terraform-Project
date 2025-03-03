@@ -133,7 +133,6 @@ resource "aws_key_pair" "proxy1_key" {
 resource "aws_instance" "proxy1" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
-  # key_name      = "terraform1"
   key_name = aws_key_pair.proxy1_key.key_name
   subnet_id     = aws_subnet.public-AZ1.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
@@ -237,7 +236,7 @@ resource "aws_instance" "backend1" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private-AZ1.id
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]
+  vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   tags = {
     Name = "backend1"
   }
@@ -255,7 +254,7 @@ resource "aws_instance" "backend2" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private-AZ2.id
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]
+  vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   tags = {
     Name = "backend2"
   }
@@ -314,7 +313,7 @@ resource "aws_lb" "backend" {
   name               = "backend"
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.backend_sg.id]
+  security_groups    = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
 
   enable_deletion_protection = false
