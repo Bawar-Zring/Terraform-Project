@@ -318,11 +318,11 @@ resource "aws_lb" "backend" {
   subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
 
   enable_deletion_protection = false
+  depends_on = [ aws_instance.backend1, aws_instance.backend2 ]
 
   tags = {
     Name = "backend"
   }
-  
 }
 
 resource "aws_lb_listener" "backend_listener" {
