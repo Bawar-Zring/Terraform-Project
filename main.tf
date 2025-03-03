@@ -244,12 +244,8 @@ resource "aws_instance" "backend1" {
 
   user_data = <<-EOF
                 #!/bin/bash
-                exec > /var/log/user_data.log 2>&1
-                set -x
-
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "backend 1" | sudo tee /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
@@ -266,12 +262,8 @@ resource "aws_instance" "backend2" {
 
   user_data = <<-EOF
                 #!/bin/bash
-                exec > /var/log/user_data.log 2>&1
-                set -x
-
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "backend 2" | sudo tee /usr/share/nginx/html/index.html
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
               EOF
