@@ -130,8 +130,8 @@ ingress {
 }
 
 resource "aws_key_pair" "proxy1_key" {
-  key_name   = "proxy1_key"
-  public_key = file("./test2.pub")
+  key_name   = "proxy_key"
+  public_key = file("./proxyKey.pub")
 }
 
 resource "aws_instance" "proxy1" {
@@ -155,18 +155,13 @@ resource "aws_instance" "proxy1" {
               EOF
 } 
 
-resource "aws_key_pair" "ec2_test_proxy" {
- key_name = "proxy2_key"
- public_key = file("./test.pub")
-}
-
 resource "aws_instance" "proxy2" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.public-AZ2.id
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
-  key_name = aws_key_pair.ec2_test_proxy.key_name
+  key_name = aws_key_pair.proxy1_key.key_name
   tags = {
     Name = "proxy2"
   }
@@ -237,8 +232,8 @@ resource "aws_lb" "proxy" {
 }
 
 resource "aws_key_pair" "backend_key1" {
- key_name = "backend_key1"
- public_key = file("./backend1.pub")
+ key_name = "backend_key"
+ public_key = file("./backendKey.pub")
 }
 
 resource "aws_instance" "backend1" {
@@ -261,18 +256,13 @@ resource "aws_instance" "backend1" {
               EOF
 }
 
-resource "aws_key_pair" "backend_key2" {
- key_name = "backend_key2"
- public_key = file("./backend2.pub")
-}
-
 resource "aws_instance" "backend2" {
   ami           = "ami-05b10e08d247fb927"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private-AZ2.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
   associate_public_ip_address = true
-  key_name = aws_key_pair.backend_key2.key_name
+  key_name = aws_key_pair.backend_key1.key_name
   tags = {
     Name = "backend2"
   }
