@@ -156,7 +156,7 @@ resource "aws_instance" "proxy1" {
 } 
 
 resource "aws_key_pair" "ec2_test_proxy" {
- key_name = "test"
+ key_name = "proxy2_key"
  public_key = file("./test.pub")
 }
 
@@ -237,7 +237,7 @@ resource "aws_lb" "proxy" {
 }
 
 resource "aws_key_pair" "backend_key1" {
- key_name = "test"
+ key_name = "backend_key1"
  public_key = file("./backend1.pub")
 }
 
@@ -262,7 +262,7 @@ resource "aws_instance" "backend1" {
 }
 
 resource "aws_key_pair" "backend_key2" {
- key_name = "test"
+ key_name = "backend_key2"
  public_key = file("./backend2.pub")
 }
 
