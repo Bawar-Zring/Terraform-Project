@@ -285,7 +285,7 @@ resource "aws_lb_target_group" "backend_tg" {
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
-  depends_on = [aws_lb.proxy]
+  depends_on = [aws_lb.backend]
 
   health_check {
     path                = "/"
