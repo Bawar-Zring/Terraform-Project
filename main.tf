@@ -186,6 +186,7 @@ resource "aws_lb" "proxy" {
   subnets            = [aws_subnet.public-AZ1.id, aws_subnet.public-AZ2.id]
 
   enable_deletion_protection = false
+  depends_on = [ aws_instance.proxy1, aws_instance.proxy2, aws_security_group.proxy_sg, aws_lb_listener.proxy_listener, aws_lb_target_group.proxy_tg ]
 
   tags = {
     Name = "proxy"
@@ -318,7 +319,7 @@ resource "aws_lb" "backend" {
   subnets            = [aws_subnet.private-AZ1.id, aws_subnet.private-AZ2.id]
 
   enable_deletion_protection = false
-  depends_on = [ aws_instance.backend1, aws_instance.backend2 ]
+  depends_on = [ aws_instance.backend1, aws_instance.backend2, aws_security_group.backend_sg, aws_lb_listener.backend_listener, aws_lb_target_group.backend_tg ]
 
   tags = {
     Name = "backend"
