@@ -188,10 +188,11 @@ resource "aws_instance" "proxy1" {
   user_data = <<-EOF
     #!/bin/bash
     sudo yum update -y
+    sudo amazon-linux-extras enable nginx1 -y
     sudo yum install -y nginx
 
-    # Create Nginx configuration
-    sudo tee /etc/nginx/sites-available/reverse-proxy <<PROXY_CFG
+    # Create Nginx configuration in the correct directory
+    sudo tee /etc/nginx/conf.d/reverse-proxy.conf <<PROXY_CFG
     server {
         listen 80;
         server_name _;
@@ -206,10 +207,9 @@ resource "aws_instance" "proxy1" {
     }
     PROXY_CFG
 
-    # Enable configuration
-    sudo ln -sf /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
-    sudo rm -f /etc/nginx/sites-enabled/default
+    # Restart Nginx to apply changes
     sudo systemctl restart nginx
+    sudo systemctl enable nginx
   EOF
 } 
 
@@ -227,10 +227,11 @@ resource "aws_instance" "proxy2" {
   user_data = <<-EOF
     #!/bin/bash
     sudo yum update -y
+    sudo amazon-linux-extras enable nginx1 -y
     sudo yum install -y nginx
 
-    # Create Nginx configuration
-    sudo tee /etc/nginx/sites-available/reverse-proxy <<PROXY_CFG
+    # Create Nginx configuration in the correct directory
+    sudo tee /etc/nginx/conf.d/reverse-proxy.conf <<PROXY_CFG
     server {
         listen 80;
         server_name _;
@@ -245,10 +246,9 @@ resource "aws_instance" "proxy2" {
     }
     PROXY_CFG
 
-    # Enable configuration
-    sudo ln -sf /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
-    sudo rm -f /etc/nginx/sites-enabled/default
+    # Restart Nginx to apply changes
     sudo systemctl restart nginx
+    sudo systemctl enable nginx
   EOF
 }
 
