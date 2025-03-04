@@ -187,12 +187,14 @@ resource "aws_instance" "proxy1" {
 
   user_data = <<-EOF
     #!/bin/bash
-    sudo apt update -y
-    sudo apt install -y nginx
+    sudo apt-get update -y
+    sudo apt-get install -y nginx
 
-    cat <<NGINX_CONF | sudo tee /etc/nginx/sites-available/reverse-proxy
+    # Create Nginx configuration
+    sudo tee /etc/nginx/sites-available/reverse-proxy <<PROXY_CFG
     server {
         listen 80;
+        server_name _;
 
         location / {
             proxy_pass http://${aws_lb.backend.dns_name};
@@ -202,9 +204,11 @@ resource "aws_instance" "proxy1" {
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
     }
-    NGINX_CONF
+    PROXY_CFG
 
-    sudo ln -s /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
+    # Enable configuration
+    sudo ln -sf /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
+    sudo rm -f /etc/nginx/sites-enabled/default
     sudo systemctl restart nginx
   EOF
 } 
@@ -222,12 +226,14 @@ resource "aws_instance" "proxy2" {
   
   user_data = <<-EOF
     #!/bin/bash
-    sudo apt update -y
-    sudo apt install -y nginx
+    sudo apt-get update -y
+    sudo apt-get install -y nginx
 
-    cat <<NGINX_CONF | sudo tee /etc/nginx/sites-available/reverse-proxy
+    # Create Nginx configuration
+    sudo tee /etc/nginx/sites-available/reverse-proxy <<PROXY_CFG
     server {
         listen 80;
+        server_name _;
 
         location / {
             proxy_pass http://${aws_lb.backend.dns_name};
@@ -237,9 +243,11 @@ resource "aws_instance" "proxy2" {
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
     }
-    NGINX_CONF
+    PROXY_CFG
 
-    sudo ln -s /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
+    # Enable configuration
+    sudo ln -sf /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/
+    sudo rm -f /etc/nginx/sites-enabled/default
     sudo systemctl restart nginx
   EOF
 }
