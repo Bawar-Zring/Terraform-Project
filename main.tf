@@ -24,7 +24,6 @@ resource "aws_subnet" "private-AZ1" {
   vpc_id = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-east-1a"
-  map_public_ip_on_launch = true
 
     tags = {
         Name = "private-AZ1"
@@ -45,7 +44,6 @@ resource "aws_subnet" "private-AZ2" {
   vpc_id = aws_vpc.main.id
   cidr_block = "10.0.3.0/24"
   availability_zone = "us-east-1b"
-  map_public_ip_on_launch = true
 
     tags = {
         Name = "private-AZ2"
@@ -191,8 +189,64 @@ resource "aws_instance" "proxy1" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "proxy 1 test test test" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
+
+                # Create Nginx configuration file
+                sudo cat > /etc/nginx/nginx.conf <<EOL
+                user nginx;
+                worker_processes auto;
+                error_log /var/log/nginx/error.log notice;
+                pid /run/nginx.pid;
+
+                include /usr/share/nginx/modules/*.conf;
+
+                events {
+                    worker_connections 1024;
+                }
+
+                http {
+                    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                                      '$status $body_bytes_sent "$http_referer" '
+                                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+                    access_log  /var/log/nginx/access.log  main;
+
+                    sendfile            on;
+                    tcp_nopush          on;
+                    keepalive_timeout   65;
+                    types_hash_max_size 4096;
+
+                    include             /etc/nginx/mime.types;
+                    default_type        application/octet-stream;
+
+                    include /etc/nginx/conf.d/*.conf;
+
+                    server {
+                        listen       80;
+                        listen       [::]:80;
+                        server_name  _;
+                        root         /usr/share/nginx/html;
+
+                        include /etc/nginx/default.d/*.conf;
+
+                        location / {
+                            proxy_pass http://${aws_lb.backend.dns_name};
+                            proxy_set_header Host $host;
+                            proxy_set_header X-Real-IP $remote_addr;
+                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        }
+
+                        error_page 404 /404.html;
+                        location = /404.html {
+                        }
+
+                        error_page 500 502 503 504 /50x.html;
+                        location = /50x.html {
+                        }
+                    }
+                }
+                EOL
+
+                sudo systemctl restart nginx
                 sudo systemctl enable nginx
               EOF
 } 
@@ -212,8 +266,64 @@ resource "aws_instance" "proxy2" {
                 #!/bin/bash
                 sudo yum update -y
                 sudo yum install -y nginx
-                echo "proxy 2 test test test" > /usr/share/nginx/html/index.html
-                sudo systemctl start nginx
+
+                # Create Nginx configuration file
+                sudo cat > /etc/nginx/nginx.conf <<EOL
+                user nginx;
+                worker_processes auto;
+                error_log /var/log/nginx/error.log notice;
+                pid /run/nginx.pid;
+
+                include /usr/share/nginx/modules/*.conf;
+
+                events {
+                    worker_connections 1024;
+                }
+
+                http {
+                    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                                      '$status $body_bytes_sent "$http_referer" '
+                                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+                    access_log  /var/log/nginx/access.log  main;
+
+                    sendfile            on;
+                    tcp_nopush          on;
+                    keepalive_timeout   65;
+                    types_hash_max_size 4096;
+
+                    include             /etc/nginx/mime.types;
+                    default_type        application/octet-stream;
+
+                    include /etc/nginx/conf.d/*.conf;
+
+                    server {
+                        listen       80;
+                        listen       [::]:80;
+                        server_name  _;
+                        root         /usr/share/nginx/html;
+
+                        include /etc/nginx/default.d/*.conf;
+
+                        location / {
+                            proxy_pass http://${aws_lb.backend.dns_name};
+                            proxy_set_header Host $host;
+                            proxy_set_header X-Real-IP $remote_addr;
+                            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        }
+
+                        error_page 404 /404.html;
+                        location = /404.html {
+                        }
+
+                        error_page 500 502 503 504 /50x.html;
+                        location = /50x.html {
+                        }
+                    }
+                }
+                EOL
+
+                sudo systemctl restart nginx
                 sudo systemctl enable nginx
               EOF
 }
@@ -283,7 +393,6 @@ resource "aws_instance" "backend1" {
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private-AZ1.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
-  # associate_public_ip_address = true
   key_name = aws_key_pair.backend_key1.key_name
   tags = {
     Name = "backend1"
@@ -305,7 +414,6 @@ resource "aws_instance" "backend2" {
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private-AZ2.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id, aws_security_group.proxy_sg.id]
-  # associate_public_ip_address = true
   key_name = aws_key_pair.backend_key1.key_name
   tags = {
     Name = "backend2"
