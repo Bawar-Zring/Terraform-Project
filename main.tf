@@ -57,47 +57,47 @@ resource "aws_internet_gateway" "IGW" {
     }  
 }
 
-# resource "aws_route_table" "private-1" {
-#   vpc_id = aws_vpc.main.id
+resource "aws_route_table" "private-1" {
+  vpc_id = aws_vpc.main.id
 
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.IGW.id
-#   }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.IGW.id
+  }
 
-#   tags = {
-#     Name = "Private-1"
-#   }
-# }
+  tags = {
+    Name = "Private-1"
+  }
+}
 
-# resource "aws_route_table_association" "private-AZ1" {
-#   subnet_id      = aws_subnet.private-AZ1.id
-#   route_table_id = aws_route_table.private-1.id
-# }
+resource "aws_route_table_association" "private-AZ1" {
+  subnet_id      = aws_subnet.private-AZ1.id
+  route_table_id = aws_route_table.private-1.id
+}
 
-# resource "aws_route_table" "private-2" {
-#   vpc_id = aws_vpc.main.id
+resource "aws_route_table" "private-2" {
+  vpc_id = aws_vpc.main.id
 
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.IGW.id
-#   }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.IGW.id
+  }
 
-#   tags = {
-#     Name = "Private-2"
-#   }
-# }
+  tags = {
+    Name = "Private-2"
+  }
+}
 
-# resource "aws_route_table_association" "private-AZ2" {
-#   subnet_id      = aws_subnet.private-AZ2.id
-#   route_table_id = aws_route_table.private-2.id
-# }
+resource "aws_route_table_association" "private-AZ2" {
+  subnet_id      = aws_subnet.private-AZ2.id
+  route_table_id = aws_route_table.private-2.id
+}
 
-# resource "aws_vpc_endpoint" "s3" {
-#   vpc_id = aws_vpc.main.id
-#   service_name = "com.amazonaws.us-east-1.s3"
-#   route_table_ids = [aws_route_table.private-1.id, aws_route_table.private-2.id]  
-# }
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = aws_vpc.main.id
+  service_name = "com.amazonaws.us-east-1.s3"
+  route_table_ids = [aws_route_table.private-1.id, aws_route_table.private-2.id]  
+}
 
 resource "aws_route_table" "public-routes" {
   vpc_id = aws_vpc.main.id
@@ -120,44 +120,6 @@ resource "aws_route_table_association" "public-AZ1" {
 resource "aws_route_table_association" "public-AZ2" {
   subnet_id      = aws_subnet.public-AZ2.id
   route_table_id = aws_route_table.public-routes.id
-}
-
-resource "aws_eip" "NAT-EIP" {
-  domain = "vpc"
-}
-
-resource "aws_nat_gateway" "NAT-GW" {
-  allocation_id = aws_eip.NAT-EIP.id
-  subnet_id = aws_subnet.public-AZ1.id
-
-  tags = {
-    Name = "NAT-GW"
-  }
-
-  depends_on = [aws_internet_gateway.IGW]
-}
-
-resource "aws_route_table" "private-routes" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.NAT-GW.id
-  }
-
-  tags = {
-    Name = "Private-Routes"
-  }
-}
-
-resource "aws_route_table_association" "private-AZ1" {
-  subnet_id      = aws_subnet.private-AZ1.id
-  route_table_id = aws_route_table.private-routes.id
-}
-
-resource "aws_route_table_association" "private-AZ2" {
-  subnet_id      = aws_subnet.private-AZ2.id
-  route_table_id = aws_route_table.private-routes.id
 }
 
 resource "aws_security_group" "proxy_sg" {
