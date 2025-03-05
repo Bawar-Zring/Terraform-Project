@@ -33,7 +33,7 @@
    - First one forward traffic from public internet (IGW) to public subnets.
    - Second one forward traffic from ec2 instances in public subnets(which acts as reverse proxy), to private instances in private subnets.
 
-   -------
+   --------
 
 # Detailed explanation:
 
