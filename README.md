@@ -5,7 +5,7 @@
 
 
 # Getting Started
-- First Clone repository ```git clone <repo-url>```
+- First Clone repository ``` git clone <repo-url>```
 - Then which type of solution for private instance you preferred [Using NAT Gateway, Using VPC endpoint]
 - if ``` NAT Gateway ```
     - Create new Terraform workspace ``` terraform workspace new <NAT-workspace> ```
